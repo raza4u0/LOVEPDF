@@ -24,15 +24,19 @@ const Contact: React.FC = () => {
     setIsSubmitting(true);
     setErrorMessage(null);
 
-    // Simulate API call
     try {
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
       // Basic validation simulation
       if (!formData.email.includes('@')) {
           throw new Error("Please enter a valid email address.");
       }
 
+      // Construct mailto link
+      const mailtoLink = `mailto:raza4u0@gmail.com?subject=${encodeURIComponent(formData.subject)}&body=${encodeURIComponent(`Name: ${formData.name}\nEmail: ${formData.email}\n\nMessage:\n${formData.message}`)}`;
+      
+      // Open email client
+      window.location.href = mailtoLink;
+
+      await new Promise(resolve => setTimeout(resolve, 1000));
       setIsSuccess(true);
       setFormData({ name: '', email: '', subject: 'Support', message: '' });
     } catch (error: any) {
@@ -69,7 +73,7 @@ const Contact: React.FC = () => {
                             <div>
                                 <h4 className="font-semibold text-gray-900">Email</h4>
                                 <p className="text-gray-500 text-sm mt-1">Our friendly team is here to help.</p>
-                                <a href="mailto:support@lovepdf.com" className="text-red-600 font-medium text-sm mt-1 block hover:underline">support@lovepdf.com</a>
+                                <a href="mailto:raza4u0@gmail.com" className="text-red-600 font-medium text-sm mt-1 block hover:underline">raza4u0@gmail.com</a>
                             </div>
                         </div>
 
@@ -119,9 +123,9 @@ const Contact: React.FC = () => {
                             <div className="inline-flex items-center justify-center p-4 bg-green-100 text-green-600 rounded-full mb-6">
                                 <CheckCircle size={48} />
                             </div>
-                            <h2 className="text-3xl font-bold text-gray-900 mb-4">Message Sent!</h2>
+                            <h2 className="text-3xl font-bold text-gray-900 mb-4">Email Created!</h2>
                             <p className="text-gray-600 mb-8 max-w-md mx-auto">
-                                Thank you for contacting us. We have received your message and will get back to you as soon as possible.
+                                We've opened your email client with your message. Please verify the details and hit send.
                             </p>
                             <button 
                                 onClick={() => setIsSuccess(false)}
@@ -212,7 +216,7 @@ const Contact: React.FC = () => {
                                 {isSubmitting ? (
                                     <>
                                         <Loader2 size={20} className="animate-spin" />
-                                        <span>Sending...</span>
+                                        <span>Drafting...</span>
                                     </>
                                 ) : (
                                     <>

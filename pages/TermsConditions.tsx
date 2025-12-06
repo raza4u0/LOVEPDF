@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { FileText, AlertTriangle, Scale, Copyright } from 'lucide-react';
 
 const TermsConditions: React.FC = () => {
@@ -86,7 +86,7 @@ const TermsConditions: React.FC = () => {
         <div className="mb-12">
             <h2 className="text-2xl font-bold text-gray-900 mb-4">7. Contact Us</h2>
             <p>
-                In order to resolve a complaint regarding the Site or to receive further information regarding use of the Site, please contact us at: <a href="mailto:legal@lovepdf.com" className="text-red-600 hover:underline">legal@lovepdf.com</a>
+                In order to resolve a complaint regarding the Site or to receive further information regarding use of the Site, please contact us at: <a href="mailto:raza4u0@gmail.com" className="text-red-600 hover:underline">raza4u0@gmail.com</a>
             </p>
         </div>
 

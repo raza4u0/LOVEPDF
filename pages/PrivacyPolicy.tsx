@@ -92,7 +92,7 @@ const PrivacyPolicy: React.FC = () => {
         <div className="mb-12">
             <h2 className="text-2xl font-bold text-gray-900 mb-4">7. Contact Us</h2>
             <p>
-                If you have any questions about this Privacy Policy, please contact us at: <a href="mailto:privacy@lovepdf.com" className="text-red-600 hover:underline">privacy@lovepdf.com</a>
+                If you have any questions about this Privacy Policy, please contact us at: <a href="mailto:raza4u0@gmail.com" className="text-red-600 hover:underline">raza4u0@gmail.com</a>
             </p>
         </div>
 

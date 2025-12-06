@@ -19,10 +19,25 @@ const Feedback: React.FC = () => {
     
     setIsSubmitting(true);
     
-    // Simulate API call
     try {
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      console.log({ rating, nps, userType, category, message, email });
+      // Construct email body
+      const subject = `LOVEPDF Feedback: ${category} - ${rating}/5`;
+      const body = `
+Rating: ${rating}/5
+NPS Score: ${nps}/10
+User Type: ${userType}
+Category: ${category}
+Contact Email: ${email}
+
+Message:
+${message}
+      `;
+
+      // Open email client
+      window.location.href = `mailto:raza4u0@gmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+
+      // Simulate UI success state
+      await new Promise(resolve => setTimeout(resolve, 1000));
       setIsSuccess(true);
     } catch (error) {
       console.error(error);
@@ -53,7 +68,7 @@ const Feedback: React.FC = () => {
             </div>
             <h2 className="text-3xl font-extrabold text-gray-900 mb-4">Thank You!</h2>
             <p className="text-gray-600 mb-8 max-w-md text-lg">
-              Your feedback is incredibly valuable to us. We read every suggestion to make LOVEPDF better for you.
+              Your feedback email has been drafted. Please hit send in your email client to complete the process.
             </p>
             <div className="flex gap-4">
               <Link to="/" className="px-8 py-3 bg-gray-100 text-gray-700 font-bold rounded-xl hover:bg-gray-200 transition-colors">
@@ -226,7 +241,7 @@ const Feedback: React.FC = () => {
                 {isSubmitting ? (
                     <>
                         <Loader2 size={24} className="animate-spin" />
-                        <span>Sending...</span>
+                        <span>Submitting...</span>
                     </>
                 ) : (
                     <>

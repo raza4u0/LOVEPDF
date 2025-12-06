@@ -32,8 +32,8 @@ const Press: React.FC = () => {
                     <p className="text-gray-600 mb-6 text-sm">
                         For press inquiries, interviews, or additional information, please contact our PR team.
                     </p>
-                    <a href="mailto:press@lovepdf.com" className="text-red-600 font-bold hover:underline text-lg">
-                        press@lovepdf.com
+                    <a href="mailto:raza4u0@gmail.com" className="text-red-600 font-bold hover:underline text-lg">
+                        raza4u0@gmail.com
                     </a>
                 </div>
 

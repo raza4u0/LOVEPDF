@@ -79,8 +79,8 @@ const CookiePolicy: React.FC = () => {
             <p className="text-blue-800 text-sm mb-4">
                 If you have any questions about our use of cookies or other technologies, please email us.
             </p>
-             <a href="mailto:privacy@lovepdf.com" className="text-blue-600 font-semibold hover:underline">
-                privacy@lovepdf.com
+             <a href="mailto:raza4u0@gmail.com" className="text-blue-600 font-semibold hover:underline">
+                raza4u0@gmail.com
             </a>
         </div>
 
