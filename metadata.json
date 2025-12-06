@@ -1,0 +1,7 @@
+{
+  "name": "LOVEPDF",
+  "description": "Every tool you need to use PDFs, at your fingertips. All are 100% FREE and easy to use! Merge, split, compress, convert, edit and chat with your PDFs.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}

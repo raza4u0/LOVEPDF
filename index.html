@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LOVEPDF</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              brand: {
+                50: 'var(--color-brand-50)',
+                100: 'var(--color-brand-100)',
+                200: 'var(--color-brand-200)',
+                500: 'var(--color-brand-500)',
+                600: 'var(--color-brand-600)',
+                700: 'var(--color-brand-700)',
+              }
+            }
+          }
+        }
+      }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Dancing+Script:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+      body { 
+        font-family: 'Inter', sans-serif; 
+        background-color: #ffffff;
+        background-image: 
+          radial-gradient(at 0% 0%, hsla(350,100%,92%,1) 0, transparent 50%), 
+          radial-gradient(at 100% 0%, hsla(210,100%,92%,1) 0, transparent 50%), 
+          radial-gradient(at 100% 100%, hsla(160,100%,92%,1) 0, transparent 50%), 
+          radial-gradient(at 0% 100%, hsla(45,100%,92%,1) 0, transparent 50%);
+        background-attachment: fixed;
+        background-size: cover;
+      }
+      .font-signature { font-family: 'Dancing Script', cursive; }
+      .scrollbar-hide::-webkit-scrollbar { display: none; }
+      .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+
+      :root {
+        /* Default Red */
+        --color-brand-50: #fef2f2;
+        --color-brand-100: #fee2e2;
+        --color-brand-200: #fecaca;
+        --color-brand-500: #ef4444;
+        --color-brand-600: #dc2626;
+        --color-brand-700: #b91c1c;
+      }
+
+      [data-theme='blue'] {
+        --color-brand-50: #eff6ff;
+        --color-brand-100: #dbeafe;
+        --color-brand-200: #bfdbfe;
+        --color-brand-500: #3b82f6;
+        --color-brand-600: #2563eb;
+        --color-brand-700: #1d4ed8;
+      }
+
+      [data-theme='purple'] {
+        --color-brand-50: #faf5ff;
+        --color-brand-100: #f3e8ff;
+        --color-brand-200: #e9d5ff;
+        --color-brand-500: #a855f7;
+        --color-brand-600: #9333ea;
+        --color-brand-700: #7e22ce;
+      }
+
+      [data-theme='green'] {
+        --color-brand-50: #f0fdf4;
+        --color-brand-100: #dcfce7;
+        --color-brand-200: #bbf7d0;
+        --color-brand-500: #22c55e;
+        --color-brand-600: #16a34a;
+        --color-brand-700: #15803d;
+      }
+      
+      [data-theme='orange'] {
+        --color-brand-50: #fff7ed;
+        --color-brand-100: #ffedd5;
+        --color-brand-200: #fed7aa;
+        --color-brand-500: #f97316;
+        --color-brand-600: #ea580c;
+        --color-brand-700: #c2410c;
+      }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react": "https://aistudiocdn.com/react@^19.2.0",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.30.0",
+    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.555.0",
+    "react-router-dom": "https://aistudiocdn.com/react-router-dom@^7.9.6",
+    "pdf-lib": "https://aistudiocdn.com/pdf-lib@^1.17.1",
+    "pdfjs-dist": "https://esm.sh/pdfjs-dist@3.11.174",
+    "jszip": "https://esm.sh/jszip@3.10.1",
+    "pptxgenjs": "https://esm.sh/pptxgenjs@3.12.0",
+    "tesseract.js": "https://esm.sh/tesseract.js@5.0.5",
+    "xlsx": "https://esm.sh/xlsx@0.18.5",
+    "mammoth": "https://esm.sh/mammoth@1.6.0",
+    "jspdf": "https://esm.sh/jspdf@2.5.1",
+    "html2canvas": "https://esm.sh/html2canvas@1.4.1",
+    "gifenc": "https://esm.sh/gifenc@1.0.3"
+  }
+}
+</script>
+</head>
+  <body class="text-gray-800 antialiased">
+    <div id="root"></div>
+  </body>
+</html>
