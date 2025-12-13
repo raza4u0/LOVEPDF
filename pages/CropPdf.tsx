@@ -17,7 +17,7 @@ const CropPdf: React.FC = () => {
   const [crop, setCrop] = useState({ x: 0.1, y: 0.1, width: 0.8, height: 0.8 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
-  const [cropStart, setCropStart] = useState({ x: 0, y: 0 });
+  const [cropStart, setCropStart] = useState({ x: 0, y: 0, width: 0, height: 0 });
   const [activeHandle, setActiveHandle] = useState<string | null>(null);
 
   const handleFileSelected = async (newFiles: File[]) => {

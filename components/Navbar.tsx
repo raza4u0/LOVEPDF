@@ -181,7 +181,7 @@ const Navbar: React.FC = () => {
                                         className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors"
                                     >
                                         <div className={`p-2 rounded-lg bg-gray-50 ${tool.color}`}>
-                                            {React.cloneElement(tool.icon as React.ReactElement, { size: 18 })}
+                                            {React.cloneElement(tool.icon as React.ReactElement<any>, { size: 18 })}
                                         </div>
                                         <div>
                                             <div className="text-sm font-medium text-gray-800">{tool.title}</div>
@@ -276,7 +276,7 @@ const Navbar: React.FC = () => {
                                     onClick={() => setIsSearchOpen(false)}
                                 >
                                     <div className={`text-brand-500`}>
-                                        {React.cloneElement(tool.icon as React.ReactElement, { size: 18 })}
+                                        {React.cloneElement(tool.icon as React.ReactElement<any>, { size: 18 })}
                                     </div>
                                     <div className="text-sm font-medium text-gray-800">{tool.title}</div>
                                 </Link>

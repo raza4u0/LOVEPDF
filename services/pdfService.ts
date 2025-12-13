@@ -553,8 +553,7 @@ export const convertHtmlToPdf = async (file: File): Promise<Blob> => {
 
     const options = {
         callback: () => {
-            // Callback placeholder, handled by promise below in some versions, 
-            // but we need to wait for the process to finish.
+            // Callback placeholder
         },
         x: 20,
         y: 20,
@@ -902,21 +901,14 @@ export const saveEditedPdf = async (
          const color = hexToRgb(action.color || '#000000');
          
          if (action.type === 'draw' && action.points && action.points.length > 1) {
-            // Drawing logic
+            // Freehand Drawing
             const thickness = (action.size || 2) / scale;
-            
             for (let i = 0; i < action.points.length - 1; i++) {
                 const p1 = action.points[i];
                 const p2 = action.points[i + 1];
-                
-                const x1 = p1.x / scale;
-                const y1 = height - (p1.y / scale);
-                const x2 = p2.x / scale;
-                const y2 = height - (p2.y / scale);
-
                 page.drawLine({
-                    start: { x: x1, y: y1 },
-                    end: { x: x2, y: y2 },
+                    start: { x: p1.x / scale, y: height - (p1.y / scale) },
+                    end: { x: p2.x / scale, y: height - (p2.y / scale) },
                     thickness: thickness,
                     color: color,
                     opacity: action.opacity || 1,
@@ -924,6 +916,31 @@ export const saveEditedPdf = async (
                     lineJoin: LineJoinStyle.Round
                 });
             }
+         } else if (action.type === 'line' && action.points && action.points.length >= 2) {
+             // Straight Line
+             const p1 = action.points[0];
+             const p2 = action.points[1];
+             page.drawLine({
+                 start: { x: p1.x / scale, y: height - (p1.y / scale) },
+                 end: { x: p2.x / scale, y: height - (p2.y / scale) },
+                 thickness: (action.size || 2) / scale,
+                 color: color,
+                 opacity: action.opacity || 1,
+             });
+         } else if (action.type === 'circle') {
+             // Circle - Calculate radius from width (assuming 1:1)
+             const r = ((action.width || 0) / 2) / scale;
+             const cx = (action.x / scale) + r;
+             const cy = height - (action.y / scale) - r;
+             
+             page.drawCircle({
+                 x: cx,
+                 y: cy,
+                 size: r,
+                 borderColor: color,
+                 borderWidth: (action.size || 2) / scale,
+                 opacity: action.opacity || 1,
+             });
          } else {
              const x = action.x / scale;
              const h = (action.height || 0) / scale;
@@ -940,7 +957,21 @@ export const saveEditedPdf = async (
                      font: helveticaFont,
                      color: color
                  });
-             } else if (action.type === 'rectangle' || action.type === 'highlight') {
+             } else if (action.type === 'rectangle') {
+                 // Outlined Rectangle
+                 const w = (action.width || 0) / scale;
+                 page.drawRectangle({
+                     x: x,
+                     y: y,
+                     width: w,
+                     height: h,
+                     borderColor: color,
+                     borderWidth: (action.size || 2) / scale,
+                     opacity: action.opacity || 1,
+                     // no color (fill)
+                 });
+             } else if (action.type === 'highlight') {
+                 // Filled Rectangle (Highlight)
                  const w = (action.width || 0) / scale;
                  page.drawRectangle({
                      x: x,
@@ -948,7 +979,7 @@ export const saveEditedPdf = async (
                      width: w,
                      height: h,
                      color: color,
-                     opacity: action.opacity || 1
+                     opacity: action.opacity || 0.4
                  });
              }
          }

@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ArrowLeft, Save, Type, Square, Highlighter, Undo, Trash2, ZoomIn, ZoomOut, ChevronLeft, ChevronRight, AlertCircle, X, Move, Loader2, Pen, Layers, ListFilter } from 'lucide-react';
+import { ArrowLeft, Save, Type, Square, Highlighter, Undo, Trash2, ZoomIn, ZoomOut, ChevronLeft, ChevronRight, AlertCircle, X, Move, Loader2, Pen, Layers, ListFilter, RectangleHorizontal, Circle, Minus } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import FileUploader from '../components/FileUploader';
 import { getPdfJs, saveEditedPdf, downloadPdf } from '../services/pdfService';
 import { PdfEditAction, UploadedFile } from '../types';
 
-type Tool = 'select' | 'text' | 'rectangle' | 'highlight' | 'draw';
+type Tool = 'select' | 'text' | 'rectangle' | 'square' | 'highlight' | 'draw' | 'circle' | 'line';
 
 const EditPdf: React.FC = () => {
   const [file, setFile] = useState<UploadedFile | null>(null);
@@ -30,10 +30,11 @@ const EditPdf: React.FC = () => {
   // Drawing state
   const [isDrawing, setIsDrawing] = useState(false);
   const [currentDrawId, setCurrentDrawId] = useState<string | null>(null);
+  const [shapeStart, setShapeStart] = useState<{x: number, y: number} | null>(null);
 
   // Settings for new tools
   const [currentColor, setCurrentColor] = useState('#000000');
-  const [currentFontSize, setCurrentFontSize] = useState(16); // Acts as stroke width for Pen
+  const [currentFontSize, setCurrentFontSize] = useState(16); // Acts as stroke width for Pen/Shapes
 
   const handleFileSelected = async (newFiles: File[]) => {
     setErrorMessage(null);
@@ -120,24 +121,6 @@ const EditPdf: React.FC = () => {
     setActiveTool('select');
   };
 
-  const addRectangle = () => {
-    const id = Date.now().toString();
-    const newAction: PdfEditAction = {
-      id,
-      type: 'rectangle',
-      pageIndex: currentPage - 1,
-      x: 100,
-      y: 100,
-      width: 100,
-      height: 60,
-      color: currentColor,
-      opacity: 1
-    };
-    setActions([...actions, newAction]);
-    setSelectedActionId(id);
-    setActiveTool('select');
-  };
-
   const addHighlight = () => {
     const id = Date.now().toString();
     const newAction: PdfEditAction = {
@@ -189,13 +172,54 @@ const EditPdf: React.FC = () => {
 
       // Clicked on background means deselect unless dragging tool
       if (activeTool === 'select') {
-          // If we clicked on an element, handleMouseDown in element stops propogation.
-          // If we reached here, we clicked empty space.
           setSelectedActionId(null);
           return;
       }
 
-      // Drawing Tool
+      // Shape Tools
+      if (activeTool === 'rectangle' || activeTool === 'square' || activeTool === 'circle') {
+          setIsDrawing(true);
+          const id = Date.now().toString();
+          setCurrentDrawId(id);
+          setShapeStart({ x: relativeX, y: relativeY });
+          
+          const newAction: PdfEditAction = {
+              id,
+              type: activeTool === 'square' ? 'rectangle' : activeTool, // Square saves as rect
+              pageIndex: currentPage - 1,
+              x: relativeX,
+              y: relativeY,
+              width: 0,
+              height: 0,
+              color: currentColor,
+              size: Math.max(1, currentFontSize / 4),
+              opacity: 1
+          };
+          setActions(prev => [...prev, newAction]);
+          setSelectedActionId(id);
+      }
+
+      // Line Tool
+      if (activeTool === 'line') {
+          setIsDrawing(true);
+          const id = Date.now().toString();
+          setCurrentDrawId(id);
+          const newAction: PdfEditAction = {
+              id,
+              type: 'line',
+              pageIndex: currentPage - 1,
+              x: 0,
+              y: 0,
+              points: [{ x: relativeX, y: relativeY }, { x: relativeX, y: relativeY }],
+              color: currentColor,
+              size: Math.max(1, currentFontSize / 4),
+              opacity: 1
+          };
+          setActions(prev => [...prev, newAction]);
+          setSelectedActionId(id);
+      }
+
+      // Drawing Tool (Freehand)
       if (activeTool === 'draw') {
           setIsDrawing(true);
           const id = Date.now().toString();
@@ -208,7 +232,7 @@ const EditPdf: React.FC = () => {
               y: 0, 
               points: [{ x: relativeX, y: relativeY }],
               color: currentColor,
-              size: Math.max(2, currentFontSize / 4), // Scale down font size to reasonable stroke width
+              size: Math.max(1, currentFontSize / 4),
               opacity: 1
           };
           setActions(prev => [...prev, newAction]);
@@ -216,25 +240,59 @@ const EditPdf: React.FC = () => {
   };
 
   const handleMouseMove = (e: React.MouseEvent) => {
-      if (!isDrawing || activeTool !== 'draw' || !currentDrawId || !containerRef.current) return;
+      if (!isDrawing || !currentDrawId || !containerRef.current) return;
       
       const rect = containerRef.current.getBoundingClientRect();
       const x = e.clientX - rect.left;
       const y = e.clientY - rect.top;
 
-      // Append point to current action
-      setActions(prev => prev.map(a => {
-          if (a.id === currentDrawId && a.points) {
-              return { ...a, points: [...a.points, { x, y }] };
-          }
-          return a;
-      }));
+      if (activeTool === 'draw') {
+          setActions(prev => prev.map(a => {
+              if (a.id === currentDrawId && a.points) {
+                  return { ...a, points: [...a.points, { x, y }] };
+              }
+              return a;
+          }));
+      } else if (activeTool === 'line') {
+          setActions(prev => prev.map(a => {
+              if (a.id === currentDrawId && a.points) {
+                  return { ...a, points: [a.points[0], { x, y }] };
+              }
+              return a;
+          }));
+      } else if ((activeTool === 'rectangle' || activeTool === 'square' || activeTool === 'circle') && shapeStart) {
+          const dx = x - shapeStart.x;
+          const dy = y - shapeStart.y;
+          
+          setActions(prev => prev.map(a => {
+              if (a.id === currentDrawId) {
+                  let newX = shapeStart.x;
+                  let newY = shapeStart.y;
+                  let newW = Math.abs(dx);
+                  let newH = Math.abs(dy);
+
+                  if (activeTool === 'square' || activeTool === 'circle') {
+                      const maxDim = Math.max(newW, newH);
+                      newW = maxDim;
+                      newH = maxDim;
+                  }
+
+                  // Handle dragging backwards (negative width/height logic)
+                  if (dx < 0) newX = shapeStart.x - newW;
+                  if (dy < 0) newY = shapeStart.y - newH;
+
+                  return { ...a, x: newX, y: newY, width: newW, height: newH };
+              }
+              return a;
+          }));
+      }
   };
 
   const handleMouseUp = () => {
       if (isDrawing) {
           setIsDrawing(false);
           setCurrentDrawId(null);
+          setShapeStart(null);
       }
   };
 
@@ -314,8 +372,15 @@ const EditPdf: React.FC = () => {
          </div>
          
          {file && (
-             <div className="flex items-center gap-2 md:gap-4 overflow-x-auto px-2">
+             <div className="flex items-center gap-2 md:gap-4 overflow-x-auto px-2 scrollbar-hide">
                  {/* Tools */}
+                 <button 
+                    onClick={() => setActiveTool('select')}
+                    className={`p-2 rounded-lg flex flex-col items-center gap-1 text-xs font-medium transition-colors ${activeTool === 'select' ? 'bg-indigo-50 text-indigo-600' : 'hover:bg-gray-50 text-gray-600'}`}
+                    title="Select"
+                 >
+                     <Move size={20} />
+                 </button>
                  <button 
                     onClick={addText}
                     className={`p-2 rounded-lg flex flex-col items-center gap-1 text-xs font-medium transition-colors ${activeTool === 'text' ? 'bg-indigo-50 text-indigo-600' : 'hover:bg-gray-50 text-gray-600'}`}
@@ -330,13 +395,36 @@ const EditPdf: React.FC = () => {
                  >
                      <Pen size={20} />
                  </button>
+                 <div className="w-px h-8 bg-gray-200 mx-1"></div>
                  <button 
-                    onClick={addRectangle}
+                    onClick={() => setActiveTool(activeTool === 'rectangle' ? 'select' : 'rectangle')}
                     className={`p-2 rounded-lg flex flex-col items-center gap-1 text-xs font-medium transition-colors ${activeTool === 'rectangle' ? 'bg-indigo-50 text-indigo-600' : 'hover:bg-gray-50 text-gray-600'}`}
-                    title="Add Rectangle"
+                    title="Draw Rectangle"
+                 >
+                     <RectangleHorizontal size={20} />
+                 </button>
+                 <button 
+                    onClick={() => setActiveTool(activeTool === 'square' ? 'select' : 'square')}
+                    className={`p-2 rounded-lg flex flex-col items-center gap-1 text-xs font-medium transition-colors ${activeTool === 'square' ? 'bg-indigo-50 text-indigo-600' : 'hover:bg-gray-50 text-gray-600'}`}
+                    title="Draw Square"
                  >
                      <Square size={20} />
                  </button>
+                 <button 
+                    onClick={() => setActiveTool(activeTool === 'circle' ? 'select' : 'circle')}
+                    className={`p-2 rounded-lg flex flex-col items-center gap-1 text-xs font-medium transition-colors ${activeTool === 'circle' ? 'bg-indigo-50 text-indigo-600' : 'hover:bg-gray-50 text-gray-600'}`}
+                    title="Draw Circle"
+                 >
+                     <Circle size={20} />
+                 </button>
+                 <button 
+                    onClick={() => setActiveTool(activeTool === 'line' ? 'select' : 'line')}
+                    className={`p-2 rounded-lg flex flex-col items-center gap-1 text-xs font-medium transition-colors ${activeTool === 'line' ? 'bg-indigo-50 text-indigo-600' : 'hover:bg-gray-50 text-gray-600'}`}
+                    title="Draw Line"
+                 >
+                     <Minus size={20} className="rotate-45" />
+                 </button>
+                 <div className="w-px h-8 bg-gray-200 mx-1"></div>
                  <button 
                     onClick={addHighlight}
                     className={`p-2 rounded-lg flex flex-col items-center gap-1 text-xs font-medium transition-colors ${activeTool === 'highlight' ? 'bg-indigo-50 text-indigo-600' : 'hover:bg-gray-50 text-gray-600'}`}
@@ -425,49 +513,109 @@ const EditPdf: React.FC = () => {
                     onMouseMove={handleMouseMove}
                     onMouseUp={handleMouseUp}
                     onMouseLeave={handleMouseUp}
-                    style={{ cursor: activeTool === 'draw' ? 'crosshair' : 'default' }}
+                    style={{ cursor: (activeTool === 'draw' || activeTool === 'rectangle' || activeTool === 'square' || activeTool === 'circle' || activeTool === 'line') ? 'crosshair' : 'default' }}
                 >
                     <div ref={containerRef} className="relative shadow-xl bg-white" style={{ width: canvasRef.current?.width, height: canvasRef.current?.height }}>
                         <canvas ref={canvasRef} className="block pointer-events-none" />
                         
-                        {/* SVG Layer for Drawings */}
+                        {/* SVG Layer for Drawings and Shapes */}
                         <svg className="absolute inset-0 pointer-events-none" style={{ width: '100%', height: '100%', zIndex: 5 }}>
                              {actions
-                                .filter(a => a.pageIndex === currentPage - 1 && a.type === 'draw')
-                                .map(action => (
-                                    <path 
-                                        key={action.id}
-                                        d={getPathD(action.points)}
-                                        stroke={action.color}
-                                        strokeWidth={action.size}
-                                        fill="none"
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        opacity={action.opacity}
-                                    />
-                                ))
+                                .filter(a => a.pageIndex === currentPage - 1)
+                                .map(action => {
+                                    const strokeWidth = action.size || 2;
+                                    
+                                    if (action.type === 'draw') {
+                                        return (
+                                            <path 
+                                                key={action.id}
+                                                d={getPathD(action.points)}
+                                                stroke={action.color}
+                                                strokeWidth={strokeWidth}
+                                                fill="none"
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                opacity={action.opacity}
+                                            />
+                                        );
+                                    } else if (action.type === 'line' && action.points && action.points.length >= 2) {
+                                        return (
+                                            <line 
+                                                key={action.id}
+                                                x1={action.points[0].x}
+                                                y1={action.points[0].y}
+                                                x2={action.points[1].x}
+                                                y2={action.points[1].y}
+                                                stroke={action.color}
+                                                strokeWidth={strokeWidth}
+                                                opacity={action.opacity}
+                                            />
+                                        );
+                                    } else if (action.type === 'rectangle') {
+                                        return (
+                                            <rect
+                                                key={action.id}
+                                                x={action.x}
+                                                y={action.y}
+                                                width={action.width}
+                                                height={action.height}
+                                                stroke={action.color}
+                                                strokeWidth={strokeWidth}
+                                                fill="none"
+                                                opacity={action.opacity}
+                                            />
+                                        );
+                                    } else if (action.type === 'circle') {
+                                        // Render as circle or ellipse based on width/height
+                                        // For now, enforce Circle tool draws 1:1, so it's a circle
+                                        const r = Math.min(action.width || 0, action.height || 0) / 2;
+                                        return (
+                                            <circle
+                                                key={action.id}
+                                                cx={action.x + r}
+                                                cy={action.y + r}
+                                                r={r}
+                                                stroke={action.color}
+                                                strokeWidth={strokeWidth}
+                                                fill="none"
+                                                opacity={action.opacity}
+                                            />
+                                        );
+                                    }
+                                    return null;
+                                })
                              }
                         </svg>
 
-                        {/* Overlay Layer for interactive elements */}
+                        {/* Overlay Layer for interactive elements (selection, text input, highlight div) */}
                         <div className="absolute inset-0 overflow-hidden">
-                            {actions.filter(a => a.pageIndex === currentPage - 1 && a.type !== 'draw').map(action => (
+                            {actions.filter(a => a.pageIndex === currentPage - 1).map(action => {
+                                // Draw, Line, Circle, Rect are visually in SVG, but we need hit areas for selection
+                                // Text and Highlight are fully in Div
+                                const isSvgShape = ['draw', 'line', 'rectangle', 'circle'].includes(action.type);
+                                
+                                return (
                                 <div
                                     key={action.id}
                                     style={{
                                         position: 'absolute',
-                                        left: action.x,
-                                        top: action.y,
-                                        width: action.width,
-                                        height: action.height,
+                                        left: action.type === 'line' && action.points ? Math.min(action.points[0].x, action.points[1].x) : action.x,
+                                        top: action.type === 'line' && action.points ? Math.min(action.points[0].y, action.points[1].y) : action.y,
+                                        width: action.type === 'line' && action.points ? Math.abs(action.points[1].x - action.points[0].x) : action.width,
+                                        height: action.type === 'line' && action.points ? Math.abs(action.points[1].y - action.points[0].y) : action.height,
+                                        // Text Styles
                                         color: action.color,
                                         fontSize: action.type === 'text' ? action.size : undefined,
-                                        backgroundColor: (action.type === 'rectangle' || action.type === 'highlight') ? action.color : undefined,
-                                        opacity: action.opacity || 1,
+                                        // Highlight Fill
+                                        backgroundColor: action.type === 'highlight' ? action.color : undefined,
+                                        opacity: action.type === 'highlight' ? (action.opacity || 1) : 1, // Only apply opacity to highlight container, others handle it in SVG
                                         cursor: activeTool === 'select' ? 'move' : 'default',
-                                        border: (action.type === 'rectangle' && !action.opacity) ? `2px solid ${action.color}` : (selectedActionId === action.id ? '1px dashed #6366f1' : 'none'),
+                                        // Selection Box
+                                        border: selectedActionId === action.id ? '1px dashed #6366f1' : 'none',
                                         padding: action.type === 'text' ? '4px' : '0',
-                                        zIndex: 10
+                                        zIndex: 10,
+                                        // For SVG shapes, this div is transparent and acts as hit box
+                                        pointerEvents: isSvgShape ? (activeTool === 'select' ? 'auto' : 'none') : 'auto'
                                     }}
                                     onMouseDown={(e) => handleElementMouseDown(e, action.id)}
                                 >
@@ -486,21 +634,21 @@ const EditPdf: React.FC = () => {
                                     {selectedActionId === action.id && (
                                         <>
                                             <button 
-                                                className="absolute -top-3 -right-3 bg-red-500 text-white rounded-full p-1 shadow-sm hover:scale-110 transition-transform"
+                                                className="absolute -top-3 -right-3 bg-red-500 text-white rounded-full p-1 shadow-sm hover:scale-110 transition-transform z-50"
                                                 onClick={(e) => { e.stopPropagation(); deleteAction(action.id); }}
                                             >
                                                 <Trash2 size={12} />
                                             </button>
-                                            {action.type !== 'text' && (
+                                            {action.type !== 'text' && action.type !== 'draw' && action.type !== 'line' && (
                                                 <div 
-                                                    className="absolute bottom-0 right-0 w-4 h-4 bg-indigo-500 cursor-se-resize rounded-tl-sm"
+                                                    className="absolute bottom-0 right-0 w-4 h-4 bg-indigo-500 cursor-se-resize rounded-tl-sm z-50"
                                                     onMouseDown={(e) => handleResizeMouseDown(e, action.id)}
                                                 />
                                             )}
                                         </>
                                     )}
                                 </div>
-                            ))}
+                            )})}
                         </div>
                     </div>
                 </div>
@@ -550,13 +698,14 @@ const EditPdf: React.FC = () => {
                                         {action.type === 'draw' && <Pen size={14} />}
                                         {action.type === 'rectangle' && <Square size={14} />}
                                         {action.type === 'highlight' && <Highlighter size={14} />}
+                                        {action.type === 'circle' && <Circle size={14} />}
+                                        {action.type === 'line' && <Minus size={14} />}
                                     </div>
                                     
                                     <div className="flex-grow min-w-0">
                                         <div className="font-medium text-gray-700 truncate">
                                             {action.type === 'text' ? (action.text || 'Text') : 
-                                            action.type === 'draw' ? 'Drawing' : 
-                                            action.type === 'rectangle' ? 'Rectangle' : 'Highlight'}
+                                            action.type.charAt(0).toUpperCase() + action.type.slice(1)}
                                         </div>
                                         <div className="text-xs text-gray-400">Page {action.pageIndex + 1}</div>
                                     </div>

@@ -61,7 +61,7 @@ export interface ChatMessage {
 
 export interface PdfEditAction {
   id: string;
-  type: 'text' | 'image' | 'rectangle' | 'highlight' | 'draw';
+  type: 'text' | 'image' | 'rectangle' | 'highlight' | 'draw' | 'circle' | 'line';
   pageIndex: number;
   x: number;
   y: number;
@@ -71,7 +71,7 @@ export interface PdfEditAction {
   color?: string; // hex
   size?: number; // font size or stroke width
   opacity?: number;
-  points?: { x: number; y: number }[]; // For freehand drawing
+  points?: { x: number; y: number }[]; // For freehand drawing and lines
 }
 
 export interface WatermarkSettings {
